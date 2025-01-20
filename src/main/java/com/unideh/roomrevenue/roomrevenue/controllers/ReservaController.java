@@ -1,6 +1,7 @@
 package com.unideh.roomrevenue.roomrevenue.controllers;
 
 import com.unideh.roomrevenue.roomrevenue.models.ClientModel;
+import com.unideh.roomrevenue.roomrevenue.models.EstatusReserva;
 import com.unideh.roomrevenue.roomrevenue.models.HabitacionModel;
 import com.unideh.roomrevenue.roomrevenue.models.ReservaModel;
 import com.unideh.roomrevenue.roomrevenue.repositories.ClienteRepository;
@@ -60,6 +61,22 @@ public class ReservaController {
         // Guardar la reserva
         return repository.save(reservaModel);
     }
+
+    @PutMapping("/confirmarReserva/{id}")
+    public ResponseEntity<ReservaModel> confirmarReserva(@PathVariable Long id) {
+        Optional<ReservaModel> reserva = repository.findById(id);
+        if(!reserva.isPresent())
+            return ResponseEntity.notFound().build();
+        ReservaModel reservaRequest = reserva.get();
+        if(reservaRequest.getEstatus() == EstatusReserva.PENDIENTE){
+            reservaRequest.setEstatus(EstatusReserva.CONFIRMADA);
+            repository.save(reservaRequest);
+            return ResponseEntity.ok(reservaRequest);
+        }else
+            return ResponseEntity.badRequest().build();
+    }
+
+
 
 
 }
