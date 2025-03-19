@@ -10,12 +10,13 @@ public class LoginService {
     @Autowired
     private UserRepository userRepository;
 
-    public String getUserType(String user, String password){
-        UserModel usermodel = userRepository.findByUserAndPassword(user, password);
-        if (usermodel != null)
-            return usermodel.getUserType().name();
+    @Autowired
+    private EncryptionService encryptionService;
 
-        return null;
+    public String getUserType(String user, String password) {
+        String encryptedPassword = encryptionService.encryptPassword(password); // Encripta antes de comparar
+        UserModel usermodel = userRepository.findByUserAndPassword(user, encryptedPassword);
+
+        return (usermodel != null) ? usermodel.getUserType().name() : null;
     }
-
 }

@@ -5,7 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
-import java.util.Date;
+
 @Entity
 @Table(name = "reservas")
 @Data
@@ -19,8 +19,8 @@ public class ReservaModel {
 
 
     private Long numHabitacion;
-
-    private Long id_cliente;
+    @Column(name = "id_cliente")
+    private Long idCliente;
 
     @Column(nullable = false)
     private LocalDate fechaEntrada;

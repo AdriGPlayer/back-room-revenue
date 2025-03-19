@@ -1,5 +1,6 @@
 package com.unideh.roomrevenue.roomrevenue.controllers;
 
+import com.unideh.roomrevenue.roomrevenue.DTO.LoginRequest;
 import com.unideh.roomrevenue.roomrevenue.models.ClientModel;
 import com.unideh.roomrevenue.roomrevenue.repositories.ClienteRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.swing.text.html.Option;
 import java.util.Optional;
 
 @RestController
@@ -20,7 +22,12 @@ public class ClienteController {
     public Iterable<ClientModel> getAllClientes() {
         return repository.findAll();
     }
+    @GetMapping("/getClienteById/{id}")
+    public ResponseEntity<ClientModel> getClienteById(@PathVariable Long id){
+        Optional<ClientModel> cliente = repository.findById(id);
+        return cliente.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
 
+    }
     @GetMapping("/getClientePorEmail/{email}")
     public ResponseEntity<ClientModel> getClienteById(@PathVariable String email) {
         Optional<ClientModel> cliente = repository.findByEmail(email);
