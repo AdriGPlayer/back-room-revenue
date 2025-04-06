@@ -108,22 +108,24 @@ public class ReservaController {
         return repository.save(reservaModel);
     }
 
+
+
+
     @GetMapping("/ingresos-mensuales")
     public ResponseEntity<?> obtenerIngresosMensuales() {
-        // Obtener mes y año actuales
+
         YearMonth mesActual = YearMonth.now();
         YearMonth mesAnterior = mesActual.minusMonths(1);
 
-        // Calcular ingresos del mes actual
         double ingresosActuales = calcularIngresos(mesActual);
-        // Calcular ingresos del mes anterior
+
         double ingresosAnteriores = calcularIngresos(mesAnterior);
 
-        // Calcular el porcentaje de cambio
         double porcentajeCambio = calcularPorcentajeCambio(ingresosActuales, ingresosAnteriores);
 
-        // Respuesta en JSON
         return ResponseEntity.ok(new IngresosResponse(ingresosActuales, ingresosAnteriores, porcentajeCambio));
+
+
     }
 
     @DeleteMapping("/deleteReserva/{id}")
@@ -133,6 +135,41 @@ public class ReservaController {
 
     }
 
+    @PutMapping("/editarReserva/{id}")
+    public ResponseEntity<?> editarReserva(@PathVariable Long id, @RequestParam Long numHabitacion, @RequestBody ReservaModel reservaRequest) {
+        return repository.findById(id).map(reserva -> {
+
+            // Obtener la habitación anterior
+            Optional<HabitacionModel> habitacionAnteriorOpt = habitacionRepository.findByNumHabitacion(reserva.getNumHabitacion());
+
+            // Si cambia la habitación, actualizar la anterior a VACIA_LIMPIA
+            if (!reserva.getNumHabitacion().equals(numHabitacion) && habitacionAnteriorOpt.isPresent()) {
+                HabitacionModel habitacionAnterior = habitacionAnteriorOpt.get();
+                if (habitacionAnterior.getEstado() == EstadoHabitacion.OCUPADA_LIMPIA) {
+                    habitacionAnterior.setEstado(EstadoHabitacion.VACIA_LIMPIA);
+                    habitacionRepository.save(habitacionAnterior);
+                }
+            }
+
+            // Buscar la nueva habitación
+            Optional<HabitacionModel> habitacionNuevaOpt = habitacionRepository.findByNumHabitacion(numHabitacion);
+            if (habitacionNuevaOpt.isEmpty()) {
+                return ResponseEntity.badRequest().body("La nueva habitación no existe");
+            }
+
+            // Actualizar la reserva con los nuevos datos
+            reserva.setNumHabitacion(numHabitacion);
+            reserva.setTarifa(reservaRequest.getTarifa());
+            reserva.setFechaEntrada(reservaRequest.getFechaEntrada());
+            reserva.setFechaSalida(reservaRequest.getFechaSalida());
+            reserva.setNumeroHuespedes(reservaRequest.getNumeroHuespedes());
+
+            // Guardar la reserva actualizada
+            repository.save(reserva);
+
+            return ResponseEntity.ok(reserva);
+        }).orElse(ResponseEntity.notFound().build());
+    }
 
     @PutMapping("/confirmarReserva/{id}")
     public ResponseEntity<ReservaModel> confirmarReserva(@PathVariable Long id) {
